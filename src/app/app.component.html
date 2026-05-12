@@ -1,0 +1,110 @@
+<div class="page">
+  <header class="hero">
+    <div class="hero__badge">Home Office register</div>
+    <h1 class="hero__title">{{ title }}</h1>
+    <p class="hero__lead">
+      Search by company name or UK location to see Skilled Worker and other sponsor
+      licence signals from your backend.
+    </p>
+  </header>
+
+  <section class="search-panel" aria-label="Search sponsors">
+    <label class="field">
+      <span class="field__label">Company or location</span>
+      <div class="field__row">
+        <input
+          type="search"
+          class="field__input"
+          name="sponsorQuery"
+          [(ngModel)]="searchText"
+          (keydown.enter)="submitSearch()"
+          placeholder="e.g. Acme Ltd, Manchester, software sponsor…"
+          autocomplete="off"
+          [disabled]="loading()"
+        />
+        <button
+          type="button"
+          class="btn btn--primary"
+          (click)="submitSearch()"
+          [disabled]="loading() || !searchText.trim()"
+        >
+          @if (loading()) {
+            <span class="btn__spinner" aria-hidden="true"></span>
+            Searching…
+          } @else {
+            Search register
+          }
+        </button>
+      </div>
+    </label>
+    <p class="hint">POSTs to <code>http://127.0.0.1:8000/ask</code> with JSON body <code>&#123; "question": "…" &#125;</code></p>
+  </section>
+
+  @if (errorMessage(); as err) {
+    <div class="alert alert--error" role="alert">
+      <strong>Could not load results.</strong>
+      <span>{{ err }}</span>
+    </div>
+  }
+
+  @if (result(); as r) {
+    <section class="outcome" aria-live="polite">
+      <div class="outcome__chips">
+        <span class="chip chip--query" title="Echoed query">{{ r.query }}</span>
+        <span
+          class="chip"
+          [class.chip--yes]="r.sponsored"
+          [class.chip--no]="!r.sponsored"
+        >
+          Sponsored: {{ r.sponsored ? 'Yes' : 'No' }}
+        </span>
+        <span class="chip chip--status">{{ r.status }}</span>
+        <span class="chip chip--count">{{ r.total_matches_found }} match(es)</span>
+      </div>
+
+      <article class="summary-card">
+        <h2 class="summary-card__heading">Summary</h2>
+        <p class="summary-card__text">{{ r.summary }}</p>
+      </article>
+
+      @if (r.matches.length) {
+        <div class="matches-head">
+          <h2 class="matches-head__title">Matching organisations</h2>
+          <span class="matches-head__source">{{ r.data_source }}</span>
+        </div>
+
+        <ul class="match-grid">
+          @for (m of r.matches; track m.row_index) {
+            <li class="match-card">
+              <div class="match-card__top">
+                <h3 class="match-card__name">{{ m.organisation_name }}</h3>
+                <span class="match-card__index">#{{ m.row_index }}</span>
+              </div>
+              <dl class="match-card__meta">
+                <div>
+                  <dt>Town / area</dt>
+                  <dd>{{ m.town }}</dd>
+                </div>
+                <div>
+                  <dt>Route</dt>
+                  <dd>{{ m.route }}</dd>
+                </div>
+                <div class="match-card__meta--full">
+                  <dt>Rating</dt>
+                  <dd>{{ m.rating }}</dd>
+                </div>
+              </dl>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="empty-matches">No individual rows returned — check summary above.</p>
+      }
+
+      <footer class="disclaimer">
+        <span class="disclaimer__icon" aria-hidden="true">!</span>
+        <p>{{ r.disclaimer }}</p>
+      </footer>
+    </section>
+  }
+</div>
