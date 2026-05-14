@@ -8,6 +8,27 @@
     </p>
   </header>
 
+  <!-- Tab switcher -->
+  <div class="tabs">
+    <button
+      type="button"
+      class="tab"
+      [class.tab--active]="activeTab === 'search'"
+      (click)="activeTab = 'search'"
+    >
+      Sponsor Search
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.tab--active]="activeTab === 'agent'"
+      (click)="activeTab = 'agent'"
+    >
+      AI Agent
+    </button>
+  </div>
+
+  @if (activeTab === 'search') {
   <section class="search-panel" aria-label="Search sponsors">
     <label class="field">
       <span class="field__label">Company or location</span>
@@ -106,5 +127,75 @@
         <p>{{ r.disclaimer }}</p>
       </footer>
     </section>
+  }
+  }
+
+  <!-- Agent panel — show only when activeTab === 'agent' -->
+  @if (activeTab === 'agent') {
+    <section class="search-panel">
+      <label class="field">
+        <span class="field__label">Ask the AI Agent</span>
+        <div class="field__row">
+          <input
+            type="text"
+            class="field__input"
+            [(ngModel)]="agentQuestion"
+            (keydown.enter)="submitAgentQuery()"
+            placeholder="e.g. I have an interview at Deloitte — can they sponsor me?"
+            [disabled]="agentLoading()"
+          />
+          <button
+            type="button"
+            class="btn btn--primary"
+            (click)="submitAgentQuery()"
+            [disabled]="agentLoading() || !agentQuestion.trim()"
+          >
+            @if (agentLoading()) {
+              Thinking…
+            } @else {
+              Ask Agent
+            }
+          </button>
+        </div>
+      </label>
+      <p class="hint">Uses ReAct agent — checks sponsor register + searches web</p>
+    </section>
+
+    @if (agentResult(); as r) {
+      <section class="outcome">
+        <article class="summary-card">
+          <h2 class="summary-card__heading">Agent Answer</h2>
+          <p class="summary-card__text">{{ r.final_answer }}</p>
+        </article>
+
+        @if (r.tools_used.length) {
+          <div class="outcome__chips">
+            @for (tool of r.tools_used; track tool) {
+              <span class="chip chip--status">{{ tool }}</span>
+            }
+          </div>
+        }
+
+        @if (r.reasoning_steps.length) {
+          <article class="summary-card">
+            <h2 class="summary-card__heading">Reasoning Steps</h2>
+            @for (step of r.reasoning_steps; track $index) {
+              <p class="summary-card__text" style="font-size: 0.85rem; opacity: 0.8">
+                {{ step }}
+              </p>
+            }
+          </article>
+        }
+
+        <footer class="disclaimer">
+          <span class="disclaimer__icon">!</span>
+          <p>{{ r.disclaimer }}</p>
+        </footer>
+      </section>
+    }
+
+    @if (agentError(); as err) {
+      <div class="alert alert--error">{{ err }}</div>
+    }
   }
 </div>
