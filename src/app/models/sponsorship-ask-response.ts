@@ -16,3 +16,12 @@ export interface SponsorshipAskResponse {
   data_source: string;
   disclaimer: string;
 }
+
+export interface AgentQueryResponse {
+  question: string;
+  final_answer: string;
+  reasoning_steps: string[];
+  tools_used: string[];
+  data_source: string;
+  disclaimer: string;
+}

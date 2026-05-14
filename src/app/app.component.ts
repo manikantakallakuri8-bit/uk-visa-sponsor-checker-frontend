@@ -2,7 +2,10 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SponsorshipAskResponse } from './models/sponsorship-ask-response';
+import {
+  AgentQueryResponse,
+  SponsorshipAskResponse,
+} from './models/sponsorship-ask-response';
 import { SponsorshipApiService } from './sponsorship-api.service';
 
 function formatApiErrorDetail(err: HttpErrorResponse): string {
@@ -34,6 +37,12 @@ export class AppComponent {
 
   readonly title = 'UK sponsor licence lookup';
 
+  activeTab: 'search' | 'agent' = 'search';
+  agentQuestion = '';
+  readonly agentLoading = signal(false);
+  readonly agentResult = signal<AgentQueryResponse | null>(null);
+  readonly agentError = signal<string | null>(null);
+
   searchText = '';
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -63,6 +72,25 @@ export class AppComponent {
         } else {
           this.errorMessage.set('Something went wrong. Is the API running on port 8000?');
         }
+      },
+    });
+  }
+
+  submitAgentQuery(): void {
+    const q = this.agentQuestion.trim();
+    if (!q || this.agentLoading()) return;
+    this.agentLoading.set(true);
+    this.agentError.set(null);
+    this.agentResult.set(null);
+
+    this.api.agentQuery(q).subscribe({
+      next: (res) => {
+        this.agentResult.set(res);
+        this.agentLoading.set(false);
+      },
+      error: (err: unknown) => {
+        this.agentLoading.set(false);
+        this.agentError.set('Agent query failed. Is the API running?');
       },
     });
   }
